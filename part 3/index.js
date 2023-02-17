@@ -1,7 +1,11 @@
 const express = require("express");
 const app = express();
 
-const data = [
+const cors = require("cors");
+
+app.use(cors());
+
+let data = [
   {
     id: 1,
     name: "Arto Hellas",
@@ -23,6 +27,20 @@ const data = [
     number: "39-23-6423122",
   },
 ];
+
+const morgan = require("morgan");
+// app.use(morgan("tiny"));
+app.use(morgan(":method :url :status :request-data"));
+morgan.token("request-data", function (req, res){
+  return JSON.stringify(req.body)
+  })
+
+
+morgan.token("type", function (req, res) {
+  return req.data;
+})
+
+app.use(express.json());
 
 app.get("/", (request, response) => {
   response.send("<h1>Hurray! You have access to this API</h1>");
@@ -50,14 +68,43 @@ app.get("/api/persons/:id", (request, response) => {
   }
 });
 
-app.delete("api/persons/:id", (request, reponse) => {
-    const id = Number(request.params.id);
-    data = data.filter(person => person.id !== id)
-    response.status(204).end()
-})
+app.delete("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id);
+  console.log(id);
+  data = data.filter((person) => person.id !== id);
+  response.status(204).end();
+});
 
-const PORT = 3001;
+const generateId = () => {
+  const id = Math.floor(Math.random() * (30002002 - 2000 + 1) + 2000)
+  console.log(id)
+  return id;
+}
 
+app.post("/api/persons", (request, response) => {
+  const contact = request.body;
+  const exsitingContact = data.find(econtact => econtact.name === contact.name)
+
+  if ((!contact.name && !contact.number) || !contact.name || !contact.number) {
+    return response.status(400).json({
+      error: "content missing",
+    });
+  } else if (exsitingContact) {
+    return response.status(400).json({
+      error:"name should be unique"
+    })
+  }
+
+  const contactBody = {
+    name: contact.name,
+    number: contact.number,
+    id: generateId()
+  } 
+  data.push(contactBody);
+  response.json(contactBody);
+});
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port`);
+  console.log(`Server running on port ${PORT}`);
 });
