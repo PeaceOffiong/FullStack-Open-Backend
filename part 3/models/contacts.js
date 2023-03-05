@@ -14,7 +14,10 @@ mongoose
   });
 
 const contactSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    required:true,
+  },
   number: String,
 });
 
