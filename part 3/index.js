@@ -11,6 +11,12 @@ app.use(cors());
 app.use(morgan(":method :url :status :request-data"));
 app.use(express.json());
 
+
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  next();
+});
+
 const errorHandler = (error, request, response, next) => {
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
